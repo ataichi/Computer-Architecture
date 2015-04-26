@@ -1,0 +1,33 @@
+		; Group7.txt number 2 
+		.data
+ALPHA:	.byte 0x10, 0x20, 0x30, 0x41, 0x50, 0xFF, 0x01
+FOUND:	.byte 00
+COUNT:	.byte 00
+ADDR:	.byte 0x00
+KEY:	.byte 0x11
+
+		.code
+		DADDIU R2, R0, 0x0000	; initialization
+		DADDIU R5, R0, 0x0000 
+		DADDIU R6, R0, 0x0000		
+		DADDIU R3, R0, 0x0001	; pang increment
+		DADDIU R17, R0, 0x0008  ; Memory location of FOUND
+		DADDIU R18, R0, 0x0010  ; Memory location of COUNT
+		DADDIU R19, R0, 0x0018	; Memory location of ADDR
+		DADDIU R20, R0, 0x0020	; Memory location of KEY
+		
+L1:		LBU R1, ALPHA(R2) 		; offset		
+		BEQ R1, R0, END			; if wala na, end	
+		DADDIU R5, R5, 0x0001	; if meron pa, count increment	
+		LBU R4, 0000(R20)		; load key value
+		XOR R4, R1, R4		  	; compare if = to 'A', if yes r4 will be 0
+		BNE R4, R0, NO			; if not 0 meaning not match, go to NO
+		DADDU R6, R0, R2		; if yes, R6 is ADDR kung nasan si 'key' 
+		SB R6, 0000(R19)		; store R6 to ADDR
+		SB R3, 0000(R17)		; and set FOUND as 01
+NO:		DADDIU R2, R2, 0x0001 	; if no, increment address and continue to L1 again.
+		SB R2, 0000(R19)		; store R2+1 to ADDR
+		J L1		
+END:
+		SB R5, 0000(R18)		; store to COUNT
+		syscall 0

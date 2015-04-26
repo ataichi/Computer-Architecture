@@ -1,0 +1,46 @@
+		; SORT
+		.data
+ALPHA:	.byte 0x20, 0x60, 0x05, 0x08, 0x40, 0x88, 0x28, 0x41
+FOUND:	.byte 00
+COUNT:	.byte 00
+KEY:	.byte 0x41
+LO:		.byte 00
+HI:		.byte 00
+ADDR:	.byte 0000
+TEMP:	.byte 0x00
+
+		.code
+		DADDIU R2, R0, 0x0000	; initialization to zero
+		DADDIU R5, R0, 0x0000 
+		DADDIU R7, R0, 0x0000
+		DADDIU R3, R0, 0x0001	; pang increment
+		DADDIU R8, R0, 0x0002	; divisor for (high+low)/2
+		DADDIU R9, R0, 0x0018	; Memory location of KEY
+		DADDIU R17, R0, 0x0008  ; Memory location of FOUND
+		DADDIU R18, R0, 0x0010  ; Memory location of COUNT
+		DADDIU R19, R0, 0x0020  ; Memory location of LO
+		DADDIU R20, R0, 0x0028  ; Memory location of HI
+		DADDIU R12, R0, 0x00	; used for if less than set to 1
+		DADDIU R13, R0, 0x0030	; Memory location of ADDR
+		DADDIU R14, R0, 0x0038	; sorting temp
+		
+		LBU R10, 0000(R9)		; value of KEY put to R10
+		
+L1:		LBU R1, ALPHA(R2) 		; offset
+		DADDU R17, R2, R3
+		LBU R15, ALPHA(R17)		; store second to R15
+		BEQ R15, R0, END		; if wala na, tapos na yung count. go to CEND.
+		SLT R16, R1, R15
+		BEQ R16, R0, SORT
+		SB R1, ALPHA(R2)
+		SB R15, ALPHA(R17)
+		
+L2:		DADDIU R2, R2, 0x0001
+		J L1
+		
+SORT:	SB R15, ALPHA(R2)
+		SB R1, ALPHA(R17)
+		DADDU R2, R0, R0
+		J L2 
+		
+END: 	syscall 0

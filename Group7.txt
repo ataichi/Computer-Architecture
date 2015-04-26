@@ -1,0 +1,54 @@
+; Group 7 - Happy number
+; Members: Nicole Matthew Chua, Patricia Nieva, Kimberly Pol
+			.data
+STATUS: 	.byte 00					; flag 1 if happy
+CYCLE:		.byte 20					; Modify here maximum no. of iterations
+str_addr:   .space 8					; reserve space for string
+NUM1: 	    .word64 487					; Modify here the input
+string:	    .asciiz "\n %d is a happy number :)"
+string2:	.asciiz "\n %d is not a happy number :("
+
+			.code
+			XOR R1, R1, R1				; R1 is the input			
+			XOR R2, R2, R2				; remainder
+			XOR R4, R4, R4				; cycle value 
+			XOR R5, R5, R5				; constant value of 1 
+			XOR R10, R10, R10			; constant value of 10
+		
+			LBU R4, CYCLE(R0)			; move value of STATUS to R4
+			LD R1, NUM1(R0)				; move value of NUM1 to R1
+			DADDIU R5, R5, #0001		; for constant 1 :)
+		
+			DADDIU R10, R10, #0010		; for divide by 10
+AGAIN:		XOR R3, R3, R3				; final answer
+CONT:	
+			DDIVU R1, R10				; divide unsigned R1 to 10
+			MFHI R2						; store remainder to R2
+			MFLO R1						; store quotient to R1
+		
+			DMULTU R2, R2				; multiply the last digit
+			MFLO R2						; store answer to R2
+			DADDU R3, R3, R2			; add R3 to R2
+			BNE R1, R0, CONT			; go to CONT if quotient(R1) > 0
+			
+			BEQ R3, R5, HAPPY			; go to HAPPY if R3 == 1
+			DSUBU R4, R4, R5			; CYCLE - 1
+			DADDU R1, R3, R0			; move the value of R3 to R1
+			BNE R4, R0, AGAIN			; go to CONT if CYCLE > 0
+		
+			SB R0, STATUS(R0)			; not happy. set flag as 0.
+			SB R4, CYCLE(R0)			; store current cycle value 
+			DADDIU R12, R0, string2		; for printing of NOT happy number
+			SD R12, str_addr(R0)		; storing string to the address space
+			DADDIU R14, R0, str_addr	; static si R14
+			SYSCALL 5					; print is NOT a happy number string
+			J END						; END NOW
+		
+HAPPY:		SB R3, STATUS(R0)			; flag is 1. meaning is a happy number
+			SB R4, CYCLE(R0)			; store current cycle value
+			DADDIU R12, R0, string		; string of happy number
+			SD R12, str_addr(R0)		; storing string to the address space
+			DADDIU R14, R0, str_addr	; static R14.
+			SYSCALL 5					; print is a happy number string
+		
+END:		SYSCALL 0					; FINISH

@@ -1,0 +1,102 @@
+; Group 7 - Happy Number					
+				.data
+MAX:			.byte 0x00
+COUNT:			.byte 0x00
+INPUT:			.word 0x7
+str_addr:       .space 8					; save space for string
+num:			.word 0x7
+string:	        .asciiz "\n %d is a happy number"
+
+; Initializations of registers
+				.code
+				DADDIU R1, R0, 0x0010		; Memory location of INPUT
+				DADDIU R2, R0, 0x0000		; INPUT value
+				DADDIU R3, R0, 0x0000		; COUNT value
+				DADDIU R4, R0, 0x10			; Divisor to chop one digit
+				DADDIU R6, R0, 0x0000		; quotient
+				DADDIU R7, R0, 0x0008		; Mem location of count
+				DADDIU R8, R0, 0x0001		; pang minus. checking
+				DADDIU R9, R0, 0x0000		; container for square
+				DADDIU R10, R0, 0x0000		; container for addition
+				DADDIU R11, R0, 0x0000		; current value of cycle
+				DADDIU R12, R0, 0x0000		; Memory location of MAX
+				DADDIU R13, R0, 0x0014		; to check if MAX. 20 is 14 in Hex.
+				DADDIU R15, R0, 10		; for hex to dec. 16 is 10
+				DADDIU R16, R0, 0x0000		; count for hextodec
+				DADDIU R17, R0, 0x0000
+				DADDIU R18, R0, 0x0001		; container of 16 raised to
+				DADDIU R19, R0, 0x0000		; temp = exponent value
+				DADDIU R20, R0, 0x0000		; exponent count
+				DADDIU R21, R0, 0x0000		; hex converted to decimal value
+				DADDIU R22, R0, 0x0000		; flag; 1 if nakadecimal..0 if convert to hex mode
+				DADDIU R23, R0, 0x0000
+				DADDIU R24, R0, 0x0000
+				J L2
+FLAG:			DADDU R22, R0, R8			; set to hindi mag hhextodec mode
+				DADDU R24, R3, R8			; count+1
+				J hextodec
+plusone:		DADDU R16, R16, R8			; exponent++				
+hextodec:		
+				DDIVU R6, R4				; chop 1 digit fom the right.
+				MFHI R2						; remainder; chopped digit
+				MFLO R6						; quotient; remaining digits				
+				BEQ R16, R3, L3				; if exponent = to count, L3.
+				
+exp:			BEQ R16, R0, L4				; if exp is 0
+				BEQ R16, R8, L5				; if exp is 1
+mult:			DMULTU R15, R15				; 16 x 16
+				MFLO R17					; R17 gets answer
+				DADDU R23, R23, R17 		; R23 = R23 + R17
+				BNE R16, R3, mult 			; continue to multiply 
+						
+				J L3			
+				
+L5:				DMULTU R15, R8
+				MFLO R17
+				DMULTU R17, R2
+				MFLO R17
+				DADDU R23, R23, R17
+				J plusone
+L4: 			DADDU R23, R23, R2			; if exp is 0. add remainder only.
+				J plusone
+; This is for counting how many digits				
+L3:				SD R23, 0000(R1)
+L2:				LD R6, 0000(R1)				; load input value to R6 for division
+				DADDU R11, R11, R8			; current: cycle = cycle + 1
+				SB R11, 0000(R12)			; store CYCLE count
+L1:				DADDIU R3, R3, 0x0001		; increment count
+				SB R3, 0000(R7)				; store count
+				DDIVU R6, R4				; Divide by 10 to chop 1 digit in right
+				MFLO R6						; R6 = quotient
+				SLTIU R22, R11, 0002		; set if hindi mag hextodec; R18=1.
+				
+				BEQ R6, R0, CEND			; If quotient = 0, then end count.				
+				J L1						; if not continue counting
+
+				
+; While count != 0, this would perform checking of happy number
+CEND:			LD R6, 0000(R1)				; load input value to R6.
+				
+				BEQ R22, R0, FLAG			; jump to hextodec if hex pa.			
+				
+HAPPY:			DSUBU R3, R3, R8			; count--
+				SB R3, 0000(R7)				; store count
+				DDIVU R6, R4				; Divide by 10 to chop 1 digit in right
+				MFHI R2						; R2 = remainder
+				MFLO R6						; R6 = quotient
+				DMULTU R2, R2				; squared
+				MFLO R9						; R9 = value of squared
+				DADDU R10, R10, R9			; R10 = R10 + R9
+				BNE R3, R0, CEND			; if count != 0, continue squaring				
+
+				SD R10, 0000(R1)
+				BEQ R11, R13, END			; if REACHED MAX cycle of 20, END
+				BNE R10, R8, L2				; if !=1, cycle again. Jump to L2		
+
+; IT'S A HAPPY NUMBER. PRINT PRINT PRINT
+				DADDIU R12, R0, string
+				SD R12, str_addr(R0)
+				DADDIU R14, R0, str_addr	; static si R14. do not change pls.
+				SYSCALL 5
+				
+END:			SYSCALL 0

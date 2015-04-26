@@ -1,0 +1,27 @@
+		; Group7.txt number 1
+		.data
+ALPHA:	.byte 0x10, 0x20, 0x30, 0x41, 0x50, 0xFF
+FOUND:	.byte 00
+ADDR:	.byte 0x00
+KEY:	.byte 0x40
+
+		.code
+		DADDIU R2, R0, 0x0000	; initialization 
+		DADDIU R3, R0, 0x0001	; pang increment
+		DADDIU R6, R0, 0x0018	; Memory location of KEY
+		DADDIU R17, R0, 0x0008  ; Memory location of FOUND
+		DADDIU R18, R0, 0x0010  ; Memory location of ADDR
+		
+L1:		LBU R1, ALPHA(R2) 		; offset
+		LBU R4, 0000(R6)
+		XOR R4, R1, R4  		; compare if = to 'A', if yes r4 will be 0
+		BEQ R4, R0, YES			; if R4 is equal to 0 meaning match, go to YES
+		XORI R5, R1, 0xFF		; compare if FF na, if yes, end.
+		BEQ R5, R0, END	
+		DADDIU R2, R2, 0x0001 	; if no, increment address and continue to L1 again.
+		J L1
+		
+YES:	SB R3, 0000(R17)		; set FOUND as 01
+END:							; R2 contains the address
+		SB R2, 0000(R18)
+		syscall 0

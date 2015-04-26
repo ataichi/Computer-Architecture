@@ -1,0 +1,19 @@
+.data
+
+.code
+				DADDIU R16, R0, 0x0000
+				DADDIU R15, R0, 0x0000
+				DADDIU R10, R0, 0x0000
+				DADDIU R17, R0, 0x0030
+				DADDIU R18, R0, 0x0041
+				
+hextodec:		SLTI R15, R10, 41			; set R15 as 1 if R10 is > 41h. 0x41 is A.
+				BEQ R15, R0, letter				; < 9, jump to label
+				DADDIU R16, R10, 30			; R16 = R10 - 30
+				J L3
+letter:			DADDIU R15, R10, 41			; R15 = R10 - 41
+				DADDIU R16, R15, 10			; R16 = R15 + A
+				
+L3:				DADDU R10, R0, R16			; R10 = R16				
+
+				syscall 0

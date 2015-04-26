@@ -1,0 +1,61 @@
+		; Group7.txt number 3
+		.data
+ALPHA:	.byte 0x02, 0x03, 0x05, 0x08, 0x10, 0x15, 0x20, 0x41
+FOUND:	.byte 00
+COUNT:	.byte 00
+KEY:	.byte 0x20
+LO:		.byte 00
+HI:		.byte 00
+ADDR:	.byte 0000
+
+		.code
+		DADDIU R2, R0, 0x0000	; initialization to zero
+		DADDIU R5, R0, 0x0000 
+		DADDIU R7, R0, 0x0000
+		DADDIU R3, R0, 0x0001	; pang increment
+		DADDIU R8, R0, 0x0002	; divisor for (high+low)/2
+		DADDIU R9, R0, 0x0018	; Memory location of KEY
+		DADDIU R17, R0, 0x0008  ; Memory location of FOUND
+		DADDIU R18, R0, 0x0010  ; Memory location of COUNT
+		DADDIU R19, R0, 0x0020  ; Memory location of LO
+		DADDIU R20, R0, 0x0028  ; Memory location of HI
+		DADDIU R12, R0, 0x00	; used for if less than set to 1
+		DADDIU R13, R0, 0x0030	; Memory location of ADDR
+		
+		LBU R10, 0000(R9)		; value of KEY put to R10
+L1:		LBU R1, ALPHA(R2) 		; offset
+		BEQ R1, R0, CEND		; if wala na, tapos na yung count. go to CEND.	
+		DADDIU R5, R5, 0x0001	; if meron pa, count increment	
+		SB R5, 0000(R18)		; store R5(count) to memory address of COUNT
+		DADDIU R2, R2, 0x0001 
+		J L1						
+		
+CEND:	DADDU R2, R0, R0 		; initialize R2 to 0
+		
+		DADDIU R2, R2, 0x0001
+		SB R2, 0000(R19)		; store to LO the lowest index
+		SB R5, 0000(R20)		; store to HI the highest index	
+		
+ADD:	LB R2, 0000(R19)		; load to R2 si LO
+		LB R5, 0000(R20)		; load to R5 si HI
+		DADDU R7, R5, R2		; high + low = R7
+		
+MID:	DDIVU R7, R8 			; divide by 2
+		MFLO R7					; put to R7
+		
+SEARCH:	LBU R1, ALPHA(R7)		; Load to R1 yung icocompare
+		SB R7, 0000(R13)		; na kay R13 yung address
+		BEQ R1, R10, YES		; found go to YES, R7 contains the address		
+		BEQ R5, R3, END			; if HI is equal to 1, end
+		SLT R12, R1, R10		; if value is less than key set R12 as 1
+		BEQ R12, R0, LEFT		; if R12 is != 0 go to LEFT
+RIGHT:	 
+		SB R7, 0000(R19)		; store middle value as next LO
+		J ADD
+LEFT:	
+		SB R7, 0000(R20)		; store mid value as new HI
+		J ADD
+
+YES:	SB R3, 0000(R17)		; set found = 1
+END: 							
+		syscall 0
